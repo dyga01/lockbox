@@ -1,25 +1,15 @@
 use iced::{
-    button, text_input, Alignment, Button, Column, Container, Element, Length, Sandbox, Settings, Text, TextInput,
+    text_input, Alignment, Button, Column, Container, Element, Length, Sandbox, Settings, Text, TextInput,
     Background, Color,
 };
 use iced::widget::Image;
 
-#[derive(Default)]
-struct LoginPage {
-    username: String,
-    password: String,
-    username_input: text_input::State,
-    password_input: text_input::State,
-    login_button: button::State,
-}
+mod login;
+mod store;
+use login::{LoginPage, Message};
+use store::StorePage;
 
-#[derive(Debug, Clone)]
-enum Message {
-    UsernameChanged(String),
-    PasswordChanged(String),
-    LoginPressed,
-}
-
+// Custom style for the text input fields
 struct CustomTextInput;
 
 impl text_input::StyleSheet for CustomTextInput {
@@ -49,6 +39,7 @@ impl text_input::StyleSheet for CustomTextInput {
     }
 }
 
+// Implement the Sandbox trait for the LoginPage struct
 impl Sandbox for LoginPage {
     type Message = Message;
 
@@ -60,20 +51,12 @@ impl Sandbox for LoginPage {
         String::from("lockbox")
     }
 
+    // Update the state of the application based on the received message
     fn update(&mut self, message: Message) {
-        match message {
-            Message::UsernameChanged(value) => {
-                self.username = value;
-            }
-            Message::PasswordChanged(value) => {
-                self.password = value;
-            }
-            Message::LoginPressed => {
-                println!("Username: {}, Password: {}", self.username, self.password);
-            }
-        }
+        self.update(message);
     }
 
+    // Define the view of the application
     fn view(&mut self) -> Element<Message> {
         let logo = Container::new(
             Image::new("images/logo.png")
@@ -136,6 +119,10 @@ impl Sandbox for LoginPage {
     }
 }
 
+// Main function that calls the iced front-end
 fn main() {
     LoginPage::run(Settings::default());
 }
+
+// decide on formatting
+// decide on encryption tecnique

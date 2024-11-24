@@ -1,3 +1,5 @@
+// src/store.rs
+
 use iced::{Element, Text};
 
 #[derive(Default)]
@@ -9,8 +11,6 @@ impl StorePage {
     }
 
     pub fn view(&self) -> Element<crate::login::Message> {
-        Text::new("Welcome to the where files will be stored!").into()
+        Text::new("Welcome to the store page!").into()
     }
 }
-
-// when the user is authenticated they should be moved to the store.rs page

@@ -1,8 +1,10 @@
-// login.rs
+// src/login.rs
 
+use crate::AppState;
+use crate::store::StorePage;
 use iced::{button, text_input};
 use serde::{Deserialize, Serialize};
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::io::{Read, Write};
 
 // Define the state of the login page
@@ -14,6 +16,8 @@ pub struct LoginPage {
     pub password_input: text_input::State,
     pub login_button: button::State,
     pub authenticated: bool,
+    pub state: AppState,
+    pub store_page: StorePage, // Add this line
 }
 
 // Define the messages that can be sent in the application
@@ -83,7 +87,7 @@ impl LoginPage {
             Message::SwitchToStorePage => {
                 // Logic to switch to the store page
                 println!("switched to store page, need logic");
-                // This can be implemented by changing the application's state
+                self.state = AppState::StorePage; // Update the state
             }
         }
     }

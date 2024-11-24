@@ -18,6 +18,7 @@ pub enum AppState {
     StorePage,
 }
 
+// Default state is the login page
 impl Default for AppState {
     fn default() -> Self {
         AppState::LoginPage
@@ -28,6 +29,7 @@ impl Default for AppState {
 struct CustomTextInput;
 
 impl text_input::StyleSheet for CustomTextInput {
+    // Style for active state
     fn active(&self) -> text_input::Style {
         text_input::Style {
             background: Background::Color(Color::WHITE),
@@ -37,38 +39,47 @@ impl text_input::StyleSheet for CustomTextInput {
         }
     }
 
+    // Style for focused state
     fn focused(&self) -> text_input::Style {
         self.active()
     }
 
+    // Color for placeholder text
     fn placeholder_color(&self) -> Color {
         Color::from_rgb(0.5, 0.5, 0.5)
     }
 
+    // Color for input value text
     fn value_color(&self) -> Color {
         Color::BLACK
     }
 
+    // Color for text selection
     fn selection_color(&self) -> Color {
         Color::from_rgb(66.0 / 255.0, 144.0 / 255.0, 245.0 / 255.0) // Set to #4290f5
     }
 }
 
+// Implement the Sandbox trait for LoginPage
 impl Sandbox for LoginPage {
     type Message = Message;
 
+    // Create a new instance of LoginPage
     fn new() -> Self {
         Self::default()
     }
 
+    // Set the title of the application
     fn title(&self) -> String {
         String::from("lockbox")
     }
 
+    // Update the state based on the received message
     fn update(&mut self, message: Message) {
         self.update(message);
     }
 
+    // Define the view for the application
     fn view(&mut self) -> Element<Message> {
         match self.state {
             AppState::LoginPage => {
@@ -105,7 +116,7 @@ impl Sandbox for LoginPage {
                 .padding(10)
                 .size(20)
                 .width(Length::Units(200)) // Set fixed width
-                .style(CustomTextInput) // Add this line
+                .style(CustomTextInput)
                 .password();
 
                 let login_button = Button::new(&mut self.login_button, Text::new("login"))
@@ -141,7 +152,7 @@ impl Sandbox for LoginPage {
 
 // Main function that calls the iced front-end
 fn main() {
-    LoginPage::run(Settings::default());
+    LoginPage::run(Settings::default()).unwrap();
 }
 
 /*

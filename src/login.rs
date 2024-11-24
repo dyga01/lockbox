@@ -3,16 +3,16 @@
 use crate::store::StorePage;
 use crate::AppState;
 use aes::Aes256;
-use block_modes::{BlockMode, Cbc};
 use block_modes::block_padding::Pkcs7;
+use block_modes::{BlockMode, Cbc};
+use dotenv::dotenv;
+use hex::{decode, encode};
 use iced::{button, text_input};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::env;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
-use hex::{encode, decode};
-use rand::Rng;
-use dotenv::dotenv;
-use std::env;
 
 // Create an alias for convenience
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
@@ -49,31 +49,39 @@ struct AuthData {
 impl LoginPage {
     pub fn update(&mut self, message: Message) {
         match message {
+            // Handle username change
             Message::UsernameChanged(value) => {
                 self.username = value;
             }
+            // Handle password change
             Message::PasswordChanged(value) => {
                 self.password = value;
             }
+            // Handle login button press
             Message::LoginPressed => {
+                // Check if username or password is empty
                 if self.username.is_empty() || self.password.is_empty() {
                     return;
                 }
 
+                // Load environment variables
                 dotenv().ok();
                 let key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
                 let key = key.as_bytes(); // Convert to bytes
-                let iv = rand::thread_rng().gen::<[u8; 16]>(); // 16 bytes
+                let iv = rand::thread_rng().gen::<[u8; 16]>(); // Generate 16 bytes IV
 
+                // Create auth data
                 let auth_data = AuthData {
                     username: self.username.clone(),
                     password: self.password.clone(),
                 };
 
+                // Serialize auth data to JSON
                 let plaintext = serde_json::to_string(&auth_data).unwrap();
                 let cipher = Aes256Cbc::new_from_slices(key, &iv).unwrap();
                 let ciphertext = cipher.encrypt_vec(plaintext.as_bytes());
 
+                // Open authentication file
                 let mut file = OpenOptions::new()
                     .read(true)
                     .write(true)
@@ -110,6 +118,7 @@ impl LoginPage {
                     let decrypted_data = cipher.decrypt_vec(&ciphertext).unwrap();
                     let stored_auth: AuthData = serde_json::from_slice(&decrypted_data).unwrap();
 
+                    // Verify credentials
                     if stored_auth.username == self.username
                         && stored_auth.password == self.password
                     {
@@ -121,6 +130,7 @@ impl LoginPage {
                     }
                 }
             }
+            // Handle switching to the store page
             Message::SwitchToStorePage => {
                 // Logic to switch to the store page
                 println!("switched to store page, need logic");

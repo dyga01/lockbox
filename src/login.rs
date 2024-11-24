@@ -59,7 +59,7 @@ impl LoginPage {
                     .read(true)
                     .write(true)
                     .create(true)
-                    .open("db/authentication.json")
+                    .open("auth/authentication.json")
                     .unwrap();
 
                 let mut contents = String::new();

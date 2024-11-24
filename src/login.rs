@@ -11,6 +11,8 @@ use std::fs::OpenOptions;
 use std::io::{Read, Write};
 use hex::{encode, decode};
 use rand::Rng;
+use dotenv::dotenv;
+use std::env;
 
 // Create an alias for convenience
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
@@ -58,7 +60,9 @@ impl LoginPage {
                     return;
                 }
 
-                let key = b"an example very very secret key."; // 32 bytes
+                dotenv().ok();
+                let key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
+                let key = key.as_bytes(); // Convert to bytes
                 let iv = rand::thread_rng().gen::<[u8; 16]>(); // 16 bytes
 
                 let auth_data = AuthData {

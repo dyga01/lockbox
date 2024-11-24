@@ -64,7 +64,10 @@ impl LoginPage {
 
                 let mut contents = String::new();
                 file.read_to_string(&mut contents).unwrap();
-                
+
+                // Clean the contents by removing null characters
+                contents = contents.trim_matches(char::from(0)).to_string();
+
                 println!("contents: {}", contents);
                 if contents.trim().is_empty() || contents == r#"{"username":"","password":""}"# {
                     // First time login, save the credentials

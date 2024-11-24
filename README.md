@@ -1,6 +1,6 @@
 # lockbox
 
-![Logo](images/logo-full.png)
+![Logo](images/logo-full-transparent.png)
 
 ## Overview
 

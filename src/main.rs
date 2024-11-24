@@ -105,6 +105,7 @@ impl Sandbox for LoginPage {
                 .padding(10)
                 .size(20)
                 .width(Length::Units(200)) // Set fixed width
+                .style(CustomTextInput) // Add this line
                 .password();
 
                 let login_button = Button::new(&mut self.login_button, Text::new("login"))

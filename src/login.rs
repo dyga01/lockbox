@@ -75,6 +75,8 @@ impl LoginPage {
                     file.set_len(0).unwrap(); // Truncate the file
                     file.write_all(json.as_bytes()).unwrap();
                     self.authenticated = true;
+                    // Switch to the store page
+                    self.update(Message::SwitchToStorePage);
                 } else {
                     // Check if the credentials match
                     let stored_auth: AuthData = serde_json::from_str(&contents).unwrap();

@@ -1,16 +1,37 @@
-// src/store.rs
-
-use iced::{Element, Text};
+use iced::{Element, Text, Column, Container, Length, Scrollable, Image, scrollable};
 
 #[derive(Default)]
-pub struct StorePage;
+pub struct StorePage {
+    scroll: scrollable::State,
+}
 
 impl StorePage {
     pub fn new() -> Self {
-        Self::default()
+        Self {
+            scroll: scrollable::State::new(),
+        }
     }
 
-    pub fn view(&self) -> Element<crate::login::Message> {
-        Text::new("Welcome to the store page!").into()
+    pub fn view(&mut self) -> Element<crate::login::Message> {
+        let logo = Container::new(
+            Image::new("images/logo.png")
+                .width(Length::Units(40))
+                .height(Length::Units(40))
+        )
+        .padding(10);
+
+        let content = Column::new()
+            .push(logo)
+            .push(Text::new("Welcome to the store page!"));
+
+        let scrollable_content = Scrollable::new(&mut self.scroll)
+            .push(content)
+            .width(Length::Fill)
+            .height(Length::Fill);
+
+        Container::new(scrollable_content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 }

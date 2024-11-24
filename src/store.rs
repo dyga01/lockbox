@@ -1,4 +1,4 @@
-use iced::{Element, Text, Column, Container, Length, Scrollable, Image, scrollable};
+use iced::{scrollable, Column, Container, Element, Image, Length, Scrollable, Text};
 
 #[derive(Default)]
 pub struct StorePage {
@@ -16,7 +16,7 @@ impl StorePage {
         let logo = Container::new(
             Image::new("images/logo.png")
                 .width(Length::Units(40))
-                .height(Length::Units(40))
+                .height(Length::Units(40)),
         )
         .padding(10);
 

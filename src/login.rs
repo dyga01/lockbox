@@ -1,7 +1,7 @@
 // src/login.rs
 
-use crate::AppState;
 use crate::store::StorePage;
+use crate::AppState;
 use iced::{button, text_input};
 use serde::{Deserialize, Serialize};
 use std::fs::OpenOptions;
@@ -80,7 +80,9 @@ impl LoginPage {
                 } else {
                     // Check if the credentials match
                     let stored_auth: AuthData = serde_json::from_str(&contents).unwrap();
-                    if stored_auth.username == self.username && stored_auth.password == self.password {
+                    if stored_auth.username == self.username
+                        && stored_auth.password == self.password
+                    {
                         self.authenticated = true;
                         // Switch to the store page
                         self.update(Message::SwitchToStorePage);

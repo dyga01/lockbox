@@ -1,10 +1,10 @@
 // src/main.rs
 
-use iced::{
-    text_input, Alignment, Button, Column, Container, Element, Length, Sandbox, Settings, Text, TextInput,
-    Background, Color,
-};
 use iced::widget::Image;
+use iced::{
+    text_input, Alignment, Background, Button, Color, Column, Container, Element, Length, Sandbox,
+    Settings, Text, TextInput,
+};
 
 mod login;
 mod store;
@@ -75,15 +75,15 @@ impl Sandbox for LoginPage {
                 let logo = Container::new(
                     Image::new("images/logo.png")
                         .width(Length::Units(40))
-                        .height(Length::Units(40))
+                        .height(Length::Units(40)),
                 )
                 .padding(10); // Add padding to the logo
-            
+
                 let logo_full = Container::new(
                     Image::new("images/logo-full.png")
                         .width(Length::Units(200))
-                        .height(Length::Units(100))
-                ); 
+                        .height(Length::Units(100)),
+                );
 
                 let username_input = TextInput::new(
                     &mut self.username_input,
@@ -143,3 +143,11 @@ impl Sandbox for LoginPage {
 fn main() {
     LoginPage::run(Settings::default());
 }
+
+/*
+COMMANDS
+- cargo run (run the project quickly)
+- cargo fmt (format the whole project)
+- cargo check (check the current project for errors without producing an executable)
+- cargo doc (build the documentation for the current project)
+*/

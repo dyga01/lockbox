@@ -1,17 +1,23 @@
-// src/store.rs
-
-use iced::{scrollable, Column, Container, Element, Image, Length, Scrollable, Text};
+use iced::{
+    button, scrollable, Button, Column, Container, Element, 
+    Image, Length, Scrollable, Text,
+};
+use std::path::PathBuf;
 
 #[derive(Default)]
 pub struct StorePage {
-    scroll: scrollable::State, // State for the scrollable content
+    scroll: scrollable::State,
+    file_select_button: button::State,
+    selected_file: Option<PathBuf>,
 }
 
 impl StorePage {
     // Constructor for StorePage
     pub fn new() -> Self {
         Self {
-            scroll: scrollable::State::new(), // Initialize scroll state
+            scroll: scrollable::State::new(),
+            file_select_button: button::State::new(),
+            selected_file: None,
         }
     }
 
@@ -25,10 +31,22 @@ impl StorePage {
         )
         .padding(10);
 
+        // Create file select button
+        let file_select_button = Button::new(
+            &mut self.file_select_button, 
+            Text::new(match &self.selected_file {
+                Some(path) => format!("Selected: {}", path.display()),
+                None => "Select File".to_string(),
+            })
+        )
+        .on_press(crate::login::Message::SwitchToStorePage);
+
         // Create the main content column
         let content = Column::new()
+            .spacing(10)
             .push(logo) // Add logo to the column
-            .push(Text::new("Welcome to the store page!")); // Add welcome text
+            .push(Text::new("Welcome to the store page!")) // Add welcome text
+            .push(file_select_button); // Add file select button
 
         // Create a scrollable container for the content
         let scrollable_content = Scrollable::new(&mut self.scroll)
@@ -41,5 +59,12 @@ impl StorePage {
             .width(Length::Fill) // Set width to fill the available space
             .height(Length::Fill) // Set height to fill the available space
             .into()
+    }
+
+    // Method to trigger file selection
+    pub fn trigger_file_selection(&mut self) {
+        if let Some(path) = rfd::FileDialog::new().pick_file() {
+            self.selected_file = Some(path);
+        }
     }
 }

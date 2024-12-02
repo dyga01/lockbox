@@ -39,7 +39,7 @@ impl StorePage {
                 None => "Select File".to_string(),
             })
         )
-        .on_press(crate::login::Message::SwitchToStorePage);
+        .on_press(crate::Message::TriggerFileSelection);
 
         // Create the main content column
         let content = Column::new()

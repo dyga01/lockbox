@@ -37,6 +37,7 @@ pub enum Message {
     PasswordChanged(String),
     LoginPressed,
     SwitchToStorePage,
+    TriggerFileSelection, // Add this line
 }
 
 // Define the authentication data structure
@@ -135,6 +136,10 @@ impl LoginPage {
                 // Logic to switch to the store page
                 println!("switched to store page, need logic");
                 self.state = AppState::StorePage; // Update the state
+            }
+            Message::TriggerFileSelection => {
+                // Handle TriggerFileSelection
+                self.store_page.trigger_file_selection();
             }
         }
     }

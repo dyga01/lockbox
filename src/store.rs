@@ -46,38 +46,38 @@ impl StorePage {
         .style(BlueButton) // Apply the custom style
         .on_press(crate::Message::TriggerFileSelection);
     
+        // Create Encrypt and Decrypt buttons
+        let encrypt_button = Button::new(
+            &mut self.encrypt_button,
+            Text::new("Encrypt").size(20)
+        )
+        .style(GreenButton)
+        .on_press(crate::Message::EncryptFile);
+
+        let decrypt_button = Button::new(
+            &mut self.decrypt_button,
+            Text::new("Decrypt").size(20)
+        )
+        .style(OrangeButton)
+        .on_press(crate::Message::DecryptFile);
+
+        // Create a row for the Encrypt and Decrypt buttons
+        let button_row = Row::new()
+            .spacing(20)
+            .push(encrypt_button)
+            .push(decrypt_button);
+
         // Create the main content column
         let mut content = Column::new()
             .spacing(20)
             .align_items(Alignment::Center) // Center all items in the column
             .push(Text::new("Select a file to encrypt or decrypt!").size(24)) // Increase text size
-            .push(file_select_button);
+            .push(file_select_button)
+            .push(button_row); // Add the button row
 
         // Display the selected file path if available
         if let Some(path) = &self.selected_file {
             content = content.push(Text::new(format!("Selected: {}", path.display())).size(20));
-
-            // Add Encrypt and Decrypt buttons in a row
-            let buttons_row = Row::new()
-                .spacing(20)
-                .push(
-                    Button::new(
-                        &mut self.encrypt_button,
-                        Text::new("Encrypt").size(20)
-                    )
-                    .style(GreenButton)
-                    .on_press(crate::Message::EncryptFile)
-                )
-                .push(
-                    Button::new(
-                        &mut self.decrypt_button,
-                        Text::new("Decrypt").size(20)
-                    )
-                    .style(OrangeButton)
-                    .on_press(crate::Message::DecryptFile)
-                );
-
-            content = content.push(buttons_row);
         }
 
         // Create a container for the content
@@ -146,7 +146,7 @@ impl button::StyleSheet for GreenButton {
     }
 }
 
-// Define a custom button style for the orange button
+// Define a custom button style for the red button
 struct OrangeButton;
 
 impl button::StyleSheet for OrangeButton {

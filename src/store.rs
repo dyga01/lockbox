@@ -1,6 +1,7 @@
 use iced::{
+    alignment,
     button, scrollable, Button, Column, Container, Element, 
-    Image, Length, Scrollable, Text,
+    Image, Length, Scrollable, Text, Alignment,
 };
 use std::path::PathBuf;
 
@@ -27,10 +28,11 @@ impl StorePage {
         let logo = Container::new(
             Image::new("images/logo.png")
                 .width(Length::Units(40))
-                .height(Length::Units(40)),
+                .height(Length::Units(40))
         )
-        .padding(10);
-
+        .padding(10)
+        .align_x(alignment::Horizontal::Center); // Center the logo horizontally
+    
         // Create file select button
         let file_select_button = Button::new(
             &mut self.file_select_button, 
@@ -40,24 +42,25 @@ impl StorePage {
             })
         )
         .on_press(crate::Message::TriggerFileSelection);
-
+    
         // Create the main content column
         let content = Column::new()
             .spacing(10)
-            .push(logo) // Add logo to the column
-            .push(Text::new("Welcome to the store page!")) // Add welcome text
-            .push(file_select_button); // Add file select button
-
-        // Create a scrollable container for the content
-        let scrollable_content = Scrollable::new(&mut self.scroll)
-            .push(content) // Add content to the scrollable container
-            .width(Length::Fill) // Set width to fill the available space
-            .height(Length::Fill); // Set height to fill the available space
-
-        // Create the main container and convert it to an Element
-        Container::new(scrollable_content)
-            .width(Length::Fill) // Set width to fill the available space
-            .height(Length::Fill) // Set height to fill the available space
+            .align_items(Alignment::Center) // Center all items in the column
+            .push(Text::new("Welcome to the store page!")) 
+            .push(file_select_button);
+    
+        // Create a container for the content
+        let container = Container::new(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y();
+    
+        // Create the main column and add the logo and container
+        Column::new()
+            .push(logo) // Add logo to the top
+            .push(container)
             .into()
     }
 

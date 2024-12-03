@@ -1,7 +1,7 @@
 use iced::{
     alignment,
     button, scrollable, Button, Column, Container, Element, 
-    Image, Length, Scrollable, Text, Alignment,
+    Image, Length, Scrollable, Text, Alignment, Background, Color,
 };
 use std::path::PathBuf;
 
@@ -23,7 +23,7 @@ impl StorePage {
     }
 
     // Method to create the view for the store page
-    pub fn view(&mut self) -> Element<crate::login::Message> {
+    pub fn view(&mut self) -> Element<crate::Message> {
         // Create a container for the logo image
         let logo = Container::new(
             Image::new("images/logo.png")
@@ -40,16 +40,18 @@ impl StorePage {
                 Some(path) => format!("Selected: {}", path.display()),
                 None => "Select File".to_string(),
             })
+            .size(20) // Increase button text size
         )
+        .style(BlueButton) // Apply the custom style
         .on_press(crate::Message::TriggerFileSelection);
     
         // Create the main content column
         let content = Column::new()
-            .spacing(10)
+            .spacing(20)
             .align_items(Alignment::Center) // Center all items in the column
-            .push(Text::new("Welcome to the store page!")) 
+            .push(Text::new("Select a file to encrypt or decrypt!").size(24)) // Increase text size
             .push(file_select_button);
-    
+
         // Create a container for the content
         let container = Container::new(content)
             .width(Length::Fill)
@@ -68,6 +70,28 @@ impl StorePage {
     pub fn trigger_file_selection(&mut self) {
         if let Some(path) = rfd::FileDialog::new().pick_file() {
             self.selected_file = Some(path);
+        }
+    }
+}
+
+// Define a custom button style
+struct BlueButton;
+
+impl button::StyleSheet for BlueButton {
+    fn active(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(66.0 / 255.0, 144.0 / 255.0, 245.0 / 255.0))), // Set to #4290f5
+            border_radius: 5.0,
+            text_color: Color::WHITE,
+            shadow_offset: iced::Vector::new(0.0, 0.0),
+            ..button::Style::default()
+        }
+    }
+
+    fn hovered(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(0.5, 0.5, 0.5))), // Darker blue on hover
+            ..self.active()
         }
     }
 }

@@ -38,6 +38,8 @@ pub enum Message {
     LoginPressed,
     SwitchToStorePage,
     TriggerFileSelection, // Add this line
+    EncryptFile,
+    DecryptFile,
 }
 
 // Define the authentication data structure
@@ -140,6 +142,14 @@ impl LoginPage {
             Message::TriggerFileSelection => {
                 // Handle TriggerFileSelection
                 self.store_page.trigger_file_selection();
+            }
+            Message::EncryptFile => {
+                // Call the function to encrypt a file
+                println!("Encrypting file...");
+            }
+            Message::DecryptFile => {
+                // Call the function to decrypt a file
+                println!("Decrypting file...");
             }
         }
     }

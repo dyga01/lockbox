@@ -1,7 +1,7 @@
 use iced::{
     alignment,
     button, scrollable, Button, Column, Container, Element, 
-    Image, Length, Scrollable, Text, Alignment, Background, Color,
+    Image, Length, Row, Text, Alignment, Background, Color,
 };
 use std::path::PathBuf;
 
@@ -9,6 +9,8 @@ use std::path::PathBuf;
 pub struct StorePage {
     scroll: scrollable::State,
     file_select_button: button::State,
+    encrypt_button: button::State,
+    decrypt_button: button::State,
     selected_file: Option<PathBuf>,
 }
 
@@ -18,6 +20,8 @@ impl StorePage {
         Self {
             scroll: scrollable::State::new(),
             file_select_button: button::State::new(),
+            encrypt_button: button::State::new(),
+            decrypt_button: button::State::new(),
             selected_file: None,
         }
     }
@@ -36,21 +40,45 @@ impl StorePage {
         // Create file select button
         let file_select_button = Button::new(
             &mut self.file_select_button, 
-            Text::new(match &self.selected_file {
-                Some(path) => format!("Selected: {}", path.display()),
-                None => "Select File".to_string(),
-            })
-            .size(20) // Increase button text size
+            Text::new("Select File")
+                .size(20) // Increase button text size
         )
         .style(BlueButton) // Apply the custom style
         .on_press(crate::Message::TriggerFileSelection);
     
         // Create the main content column
-        let content = Column::new()
+        let mut content = Column::new()
             .spacing(20)
             .align_items(Alignment::Center) // Center all items in the column
             .push(Text::new("Select a file to encrypt or decrypt!").size(24)) // Increase text size
             .push(file_select_button);
+
+        // Display the selected file path if available
+        if let Some(path) = &self.selected_file {
+            content = content.push(Text::new(format!("Selected: {}", path.display())).size(20));
+
+            // Add Encrypt and Decrypt buttons in a row
+            let buttons_row = Row::new()
+                .spacing(20)
+                .push(
+                    Button::new(
+                        &mut self.encrypt_button,
+                        Text::new("Encrypt").size(20)
+                    )
+                    .style(GreenButton)
+                    .on_press(crate::Message::EncryptFile)
+                )
+                .push(
+                    Button::new(
+                        &mut self.decrypt_button,
+                        Text::new("Decrypt").size(20)
+                    )
+                    .style(OrangeButton)
+                    .on_press(crate::Message::DecryptFile)
+                );
+
+            content = content.push(buttons_row);
+        }
 
         // Create a container for the content
         let container = Container::new(content)
@@ -74,7 +102,7 @@ impl StorePage {
     }
 }
 
-// Define a custom button style
+// Define a custom button style for the blue button
 struct BlueButton;
 
 impl button::StyleSheet for BlueButton {
@@ -91,6 +119,50 @@ impl button::StyleSheet for BlueButton {
     fn hovered(&self) -> button::Style {
         button::Style {
             background: Some(Background::Color(Color::from_rgb(0.5, 0.5, 0.5))), // Darker blue on hover
+            ..self.active()
+        }
+    }
+}
+
+// Define a custom button style for the green button
+struct GreenButton;
+
+impl button::StyleSheet for GreenButton {
+    fn active(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(0.52, 0.72, 0.59))), // #84b896
+            border_radius: 5.0,
+            text_color: Color::WHITE,
+            shadow_offset: iced::Vector::new(0.0, 0.0),
+            ..button::Style::default()
+        }
+    }
+
+    fn hovered(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(0.42, 0.62, 0.49))), // Darker green on hover
+            ..self.active()
+        }
+    }
+}
+
+// Define a custom button style for the orange button
+struct OrangeButton;
+
+impl button::StyleSheet for OrangeButton {
+    fn active(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(0.96, 0.69, 0.36))), // #f5af5b
+            border_radius: 5.0,
+            text_color: Color::WHITE,
+            shadow_offset: iced::Vector::new(0.0, 0.0),
+            ..button::Style::default()
+        }
+    }
+
+    fn hovered(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(Color::from_rgb(0.86, 0.59, 0.26))), // Darker orange on hover
             ..self.active()
         }
     }

@@ -146,10 +146,12 @@ impl LoginPage {
             Message::EncryptFile => {
                 // Call the function to encrypt a file
                 println!("Encrypting file...");
+                self.store_page.encrypt_file();
             }
             Message::DecryptFile => {
                 // Call the function to decrypt a file
                 println!("Decrypting file...");
+                self.store_page.decrypt_file();
             }
         }
     }

@@ -1,6 +1,6 @@
 use age::{secrecy::SecretString, Decryptor, Encryptor};
 use iced::{
-    alignment, button, container, scrollable, Alignment, Background, Button, Color, Column, 
+    alignment, button, container, scrollable, Alignment, Background, Button, Color, Column,
     Container, Element, Image, Length, Row, Text,
 };
 use std::fs;
@@ -59,7 +59,8 @@ impl StorePage {
                     };
 
                     // Determine file type
-                    let file_type = path.extension()
+                    let file_type = path
+                        .extension()
                         .map(|ext| ext.to_string_lossy().to_string())
                         .unwrap_or_else(|| "Unknown".to_string());
 
@@ -74,7 +75,7 @@ impl StorePage {
                         decryption_memory_used: None,
                     })
                 }
-                Err(_) => None
+                Err(_) => None,
             }
         })
     }
@@ -116,6 +117,20 @@ impl StorePage {
             .push(button_row);
 
         if let Some(details) = &self.file_details {
+            let labels_column = Column::new()
+                .spacing(10)
+                .push(Text::new("Filename:").size(18))
+                .push(Text::new("Size:").size(18))
+                .push(Text::new("Type:").size(18))
+                .push(Text::new("Path:").size(18));
+
+            let values_column = Column::new()
+                .spacing(10)
+                .push(Text::new(&details.filename).size(18))
+                .push(Text::new(&details.size).size(18))
+                .push(Text::new(&details.file_type).size(18))
+                .push(Text::new(&details.path).size(18));
+
             let details_layout = Column::new()
                 .spacing(10)
                 .push(Text::new("File Details").size(24))
@@ -123,99 +138,65 @@ impl StorePage {
                     Container::new(
                         Row::new()
                             .spacing(20)
-                            .push(Text::new("Filename:").size(18))
-                            .push(Text::new(&details.filename).size(18))
-                    )
-                    .style(AlternateRowLight)
-                    .width(Length::Units(300))
-                )
-                .push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Size:").size(18))
-                            .push(Text::new(&details.size).size(18))
+                            .push(labels_column)
+                            .push(values_column),
                     )
                     .style(AlternateRowDark)
-                    .width(Length::Units(300))
-                )
-                .push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Type:").size(18))
-                            .push(Text::new(&details.file_type).size(18))
-                    )
-                    .style(AlternateRowLight)
-                    .width(Length::Units(300))
-                )
-                .push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Path:").size(18))
-                            .push(Text::new(&details.path).size(18))
-                    )
-                    .style(AlternateRowDark)
-                    .width(Length::Units(300))
+                    .width(Length::Units(300)),
                 );
 
-            let mut performance_layout = Column::new()
+            let performance_labels_column = Column::new()
                 .spacing(10)
-                .push(Text::new("Performance Metrics").size(24));
+                .push(Text::new("Encryption Time:").size(18))
+                .push(Text::new("Encryption Memory Used:").size(18))
+                .push(Text::new("Decryption Time:").size(18))
+                .push(Text::new("Decryption Memory Used:").size(18));
 
-            if let Some(encryption_time) = details.encryption_time {
-                performance_layout = performance_layout.push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Encryption Time:").size(18))
-                            .push(Text::new(&format!("{:?}", encryption_time)).size(18))
-                    )
-                    .style(AlternateRowLight)
-                    .width(Length::Units(300))
+            let performance_values_column = Column::new()
+                .spacing(10)
+                .push(
+                    Text::new(&format!(
+                        "{:.5} s",
+                        details.encryption_time.unwrap_or_default().as_secs_f64()
+                    ))
+                    .size(18),
+                )
+                .push(
+                    Text::new(&format!(
+                        "{} KB",
+                        details.encryption_memory_used.unwrap_or_default()
+                    ))
+                    .size(18),
+                )
+                .push(
+                    Text::new(&format!(
+                        "{:.5} s",
+                        details.decryption_time.unwrap_or_default().as_secs_f64()
+                    ))
+                    .size(18),
+                )
+                .push(
+                    Text::new(&format!(
+                        "{} KB",
+                        details.decryption_memory_used.unwrap_or_default()
+                    ))
+                    .size(18),
                 );
-            }
 
-            if let Some(encryption_memory_used) = details.encryption_memory_used {
-                performance_layout = performance_layout.push(
+            let performance_layout = Column::new()
+                .spacing(10)
+                .push(Text::new("Performance Metrics").size(24))
+                .push(
                     Container::new(
                         Row::new()
                             .spacing(20)
-                            .push(Text::new("Encryption Memory Used:").size(18))
-                            .push(Text::new(&format!("{} KB", encryption_memory_used)).size(18))
-                    )
-                    .style(AlternateRowDark)
-                    .width(Length::Units(300))
-                );
-            }
-
-            if let Some(decryption_time) = details.decryption_time {
-                performance_layout = performance_layout.push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Decryption Time:").size(18))
-                            .push(Text::new(&format!("{:?}", decryption_time)).size(18))
-                    )
-                    .style(AlternateRowLight)
-                    .width(Length::Units(300))
-                );
-            }
-
-            if let Some(decryption_memory_used) = details.decryption_memory_used {
-                performance_layout = performance_layout.push(
-                    Container::new(
-                        Row::new()
-                            .spacing(20)
-                            .push(Text::new("Decryption Memory Used:").size(18))
-                            .push(Text::new(&format!("{} KB", decryption_memory_used)).size(18))
+                            .push(performance_labels_column)
+                            .push(performance_values_column),
                     )
                     .style(AlternateRowDark)
-                    .width(Length::Units(300))
+                    .width(Length::Units(300)),
                 );
-            }
-    
+
             let bordered_details = Container::new(details_layout)
                 .style(BlueBorderContainer)
                 .padding(10);
@@ -233,10 +214,7 @@ impl StorePage {
             .center_x()
             .center_y();
 
-        Column::new()
-            .push(logo)
-            .push(container)
-            .into()
+        Column::new().push(logo).push(container).into()
     }
 
     pub fn trigger_file_selection(&mut self) {
@@ -268,15 +246,11 @@ impl StorePage {
             writer.finish().expect("Failed to finalize encryption");
             fs::write(path, encrypted_output).expect("Failed to write encrypted file");
 
-            let duration = start_time.elapsed();
             system.refresh_all();
             let final_memory = system.used_memory();
+            let duration = start_time.elapsed();
 
-            let memory_used = if final_memory >= initial_memory {
-                final_memory - initial_memory
-            } else {
-                0
-            };
+            let memory_used = final_memory.saturating_sub(initial_memory);
 
             println!("Encryption time: {:?}", duration);
             println!("Memory used: {} KB", memory_used);
@@ -288,7 +262,7 @@ impl StorePage {
             }
         }
     }
-    
+
     pub fn decrypt_file(&mut self) {
         if let Some(path) = &self.selected_file {
             let mut system = System::new_all();
@@ -313,15 +287,11 @@ impl StorePage {
             };
             fs::write(path, decrypted_content).expect("Failed to write decrypted file");
 
-            let duration = start_time.elapsed();
             system.refresh_all();
             let final_memory = system.used_memory();
+            let duration = start_time.elapsed();
 
-            let memory_used = if final_memory >= initial_memory {
-                final_memory - initial_memory
-            } else {
-                0
-            };
+            let memory_used = final_memory.saturating_sub(initial_memory);
 
             println!("Decryption time: {:?}", duration);
             println!("Memory used: {} KB", memory_used);
@@ -405,7 +375,6 @@ impl button::StyleSheet for OrangeButton {
 
 // Add these struct definitions near your other style structs
 struct BlueBorderContainer;
-struct AlternateRowLight;
 struct AlternateRowDark;
 
 impl container::StyleSheet for BlueBorderContainer {
@@ -413,18 +382,8 @@ impl container::StyleSheet for BlueBorderContainer {
         container::Style {
             border_width: 1.0,
             border_color: Color::from_rgb(66.0 / 255.0, 144.0 / 255.0, 245.0 / 255.0),
+            border_radius: 5.0, // Adjust the value as needed
             ..Default::default()
-        }
-    }
-}
-
-impl container::StyleSheet for AlternateRowLight {
-    fn style(&self) -> container::Style {
-        container::Style {
-            background: Some(Background::Color(Color::WHITE)),
-            border_width: 1.0,
-            border_radius: 0.0,
-            ..container::Style::default()
         }
     }
 }

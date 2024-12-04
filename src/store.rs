@@ -1,9 +1,9 @@
 use age::{secrecy::SecretString, Decryptor, Encryptor};
 use iced::{
-    alignment, button, scrollable, Alignment, Background, Button, Color, Column, Container,
-    Element, Image, Length, Row, Text,
+    alignment, button, scrollable, Alignment, Background, Button, Color, Column, 
+    Container, Element, Image, Length, Row, Text,
 };
-use std::fs::{self, File};
+use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 
@@ -14,10 +14,18 @@ pub struct StorePage {
     encrypt_button: button::State,
     decrypt_button: button::State,
     selected_file: Option<PathBuf>,
+    file_details: Option<FileDetails>,
+}
+
+#[derive(Clone)]
+struct FileDetails {
+    filename: String,
+    size: String,
+    file_type: String,
+    path: String,
 }
 
 impl StorePage {
-    // Constructor for StorePage
     pub fn new() -> Self {
         Self {
             scroll: scrollable::State::new(),
@@ -25,29 +33,60 @@ impl StorePage {
             encrypt_button: button::State::new(),
             decrypt_button: button::State::new(),
             selected_file: None,
+            file_details: None,
         }
     }
 
-    // Method to create the view for the store page
+    // Method to extract file details
+    fn get_file_details(&self) -> Option<FileDetails> {
+        self.selected_file.as_ref().and_then(|path| {
+            // Get file metadata
+            match fs::metadata(path) {
+                Ok(metadata) => {
+                    // Convert file size to human-readable format
+                    let size = if metadata.len() < 1024 {
+                        format!("{} bytes", metadata.len())
+                    } else if metadata.len() < 1024 * 1024 {
+                        format!("{:.2} KB", metadata.len() as f64 / 1024.0)
+                    } else {
+                        format!("{:.2} MB", metadata.len() as f64 / (1024.0 * 1024.0))
+                    };
+
+                    // Determine file type
+                    let file_type = path.extension()
+                        .map(|ext| ext.to_string_lossy().to_string())
+                        .unwrap_or_else(|| "Unknown".to_string());
+
+                    Some(FileDetails {
+                        filename: path.file_name()
+                            .map(|name| name.to_string_lossy().to_string())
+                            .unwrap_or_else(|| "Unknown".to_string()),
+                        size,
+                        file_type,
+                        path: path.display().to_string(),
+                    })
+                }
+                Err(_) => None
+            }
+        })
+    }
+
     pub fn view(&mut self) -> Element<crate::Message> {
-        // Create a container for the logo image
         let logo = Container::new(
             Image::new("images/logo.png")
                 .width(Length::Units(40))
                 .height(Length::Units(40)),
         )
         .padding(10)
-        .align_x(alignment::Horizontal::Center); // Center the logo horizontally
+        .align_x(alignment::Horizontal::Center);
 
-        // Create file select button
         let file_select_button = Button::new(
             &mut self.file_select_button,
-            Text::new("Select File").size(20), // Increase button text size
+            Text::new("Select File").size(20),
         )
-        .style(BlueButton) // Apply the custom style
+        .style(BlueButton)
         .on_press(crate::Message::TriggerFileSelection);
 
-        // Create Encrypt and Decrypt buttons
         let encrypt_button = Button::new(&mut self.encrypt_button, Text::new("Encrypt").size(20))
             .style(GreenButton)
             .on_press(crate::Message::EncryptFile);
@@ -56,47 +95,71 @@ impl StorePage {
             .style(OrangeButton)
             .on_press(crate::Message::DecryptFile);
 
-        // Create a row for the Encrypt and Decrypt buttons
         let button_row = Row::new()
             .spacing(20)
             .push(encrypt_button)
             .push(decrypt_button);
 
-        // Create the main content column
         let mut content = Column::new()
             .spacing(20)
-            .align_items(Alignment::Center) // Center all items in the column
-            .push(Text::new("Select a file to encrypt or decrypt!").size(24)) // Increase text size
+            .align_items(Alignment::Center)
+            .push(Text::new("Select a file to encrypt or decrypt!").size(24))
             .push(file_select_button)
-            .push(button_row); // Add the button row
+            .push(button_row);
 
-        // Display the selected file path if available
-        if let Some(path) = &self.selected_file {
-            content = content.push(Text::new(format!("Selected: {}", path.display())).size(20));
+        // Create file details layout if a file is selected
+        if let Some(details) = &self.file_details {
+            // Custom "table-like" layout using Rows and Columns
+            let details_layout = Column::new()
+                .spacing(10)
+                .push(
+                    Row::new()
+                        .spacing(20)
+                        .push(Text::new("Filename:").size(18))
+                        .push(Text::new(&details.filename).size(18))
+                )
+                .push(
+                    Row::new()
+                        .spacing(20)
+                        .push(Text::new("Size:").size(18))
+                        .push(Text::new(&details.size).size(18))
+                )
+                .push(
+                    Row::new()
+                        .spacing(20)
+                        .push(Text::new("Type:").size(18))
+                        .push(Text::new(&details.file_type).size(18))
+                )
+                .push(
+                    Row::new()
+                        .spacing(20)
+                        .push(Text::new("Path:").size(18))
+                        .push(Text::new(&details.path).size(18))
+                );
+
+            content = content.push(details_layout);
         }
 
-        // Create a container for the content
         let container = Container::new(content)
             .width(Length::Fill)
             .height(Length::Fill)
             .center_x()
             .center_y();
 
-        // Create the main column and add the logo and container
         Column::new()
-            .push(logo) // Add logo to the top
+            .push(logo)
             .push(container)
             .into()
     }
 
-    // Method to trigger file selection
     pub fn trigger_file_selection(&mut self) {
         if let Some(path) = rfd::FileDialog::new().pick_file() {
             self.selected_file = Some(path);
+            // Update file details when a new file is selected
+            self.file_details = self.get_file_details();
         }
     }
 
-    // Method to encrypt the selected file
     pub fn encrypt_file(&self) {
         if let Some(path) = &self.selected_file {
             let file_content = fs::read(path).expect("Failed to read file");
@@ -114,7 +177,6 @@ impl StorePage {
         }
     }
 
-    // Method to decrypt the selected file
     pub fn decrypt_file(&self) {
         if let Some(path) = &self.selected_file {
             let file_content = fs::read(path).expect("Failed to read file");
@@ -136,7 +198,7 @@ impl StorePage {
     }
 }
 
-// Define a custom button style for the blue button
+// Custom button styles remain the same as in the previous implementation
 struct BlueButton;
 
 impl button::StyleSheet for BlueButton {
@@ -162,7 +224,6 @@ impl button::StyleSheet for BlueButton {
     }
 }
 
-// Define a custom button style for the green button
 struct GreenButton;
 
 impl button::StyleSheet for GreenButton {
@@ -184,7 +245,6 @@ impl button::StyleSheet for GreenButton {
     }
 }
 
-// Define a custom button style for the red button
 struct OrangeButton;
 
 impl button::StyleSheet for OrangeButton {

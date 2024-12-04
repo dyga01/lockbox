@@ -1,6 +1,6 @@
 use age::{secrecy::SecretString, Decryptor, Encryptor};
 use iced::{
-    alignment, button, scrollable, Alignment, Background, Button, Color, Column, 
+    alignment, button, container, scrollable, Alignment, Background, Button, Color, Column, 
     Container, Element, Image, Length, Row, Text,
 };
 use std::fs;
@@ -107,37 +107,58 @@ impl StorePage {
             .push(file_select_button)
             .push(button_row);
 
-        // Create file details layout if a file is selected
+            
+        // In the view function, update the details_layout creation:
         if let Some(details) = &self.file_details {
-            // Custom "table-like" layout using Rows and Columns
             let details_layout = Column::new()
                 .spacing(10)
                 .push(
-                    Row::new()
-                        .spacing(20)
-                        .push(Text::new("Filename:").size(18))
-                        .push(Text::new(&details.filename).size(18))
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Filename:").size(18))
+                            .push(Text::new(&details.filename).size(18))
+                    )
+                    .style(AlternateRowLight)
+                    .width(Length::Units(300))
                 )
                 .push(
-                    Row::new()
-                        .spacing(20)
-                        .push(Text::new("Size:").size(18))
-                        .push(Text::new(&details.size).size(18))
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Size:").size(18))
+                            .push(Text::new(&details.size).size(18))
+                    )
+                    .style(AlternateRowDark)
+                    .width(Length::Units(300))
                 )
                 .push(
-                    Row::new()
-                        .spacing(20)
-                        .push(Text::new("Type:").size(18))
-                        .push(Text::new(&details.file_type).size(18))
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Type:").size(18))
+                            .push(Text::new(&details.file_type).size(18))
+                    )
+                    .style(AlternateRowLight)
+                    .width(Length::Units(300))
                 )
                 .push(
-                    Row::new()
-                        .spacing(20)
-                        .push(Text::new("Path:").size(18))
-                        .push(Text::new(&details.path).size(18))
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Path:").size(18))
+                            .push(Text::new(&details.path).size(18))
+                    )
+                    .style(AlternateRowDark)
+                    .width(Length::Units(300))
                 );
-
-            content = content.push(details_layout);
+        
+            // Wrap the entire details layout in a bordered container
+            let bordered_details = Container::new(details_layout)
+                .style(BlueBorderContainer)
+                .padding(10);
+        
+            content = content.push(bordered_details);
         }
 
         let container = Container::new(content)
@@ -262,6 +283,43 @@ impl button::StyleSheet for OrangeButton {
         button::Style {
             background: Some(Background::Color(Color::from_rgb(0.86, 0.59, 0.26))), // Darker orange on hover
             ..self.active()
+        }
+    }
+}
+
+// Add these struct definitions near your other style structs
+struct BlueBorderContainer;
+struct AlternateRowLight;
+struct AlternateRowDark;
+
+impl container::StyleSheet for BlueBorderContainer {
+    fn style(&self) -> container::Style {
+        container::Style {
+            border_width: 1.0,
+            border_color: Color::from_rgb(66.0 / 255.0, 144.0 / 255.0, 245.0 / 255.0),
+            ..Default::default()
+        }
+    }
+}
+
+impl container::StyleSheet for AlternateRowLight {
+    fn style(&self) -> container::Style {
+        container::Style {
+            background: Some(Background::Color(Color::WHITE)),
+            border_width: 1.0,
+            border_radius: 0.0,
+            ..container::Style::default()
+        }
+    }
+}
+
+impl container::StyleSheet for AlternateRowDark {
+    fn style(&self) -> container::Style {
+        container::Style {
+            background: Some(Background::Color(Color::from_rgb(0.95, 0.95, 0.95))), // Light grey
+            border_width: 1.0,
+            border_radius: 0.0,
+            ..container::Style::default()
         }
     }
 }

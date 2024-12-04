@@ -6,6 +6,8 @@ use iced::{
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::time::Instant;
+use sysinfo::{System, SystemExt};
 
 #[derive(Default)]
 pub struct StorePage {
@@ -23,6 +25,10 @@ struct FileDetails {
     size: String,
     file_type: String,
     path: String,
+    encryption_time: Option<std::time::Duration>,
+    encryption_memory_used: Option<u64>,
+    decryption_time: Option<std::time::Duration>,
+    decryption_memory_used: Option<u64>,
 }
 
 impl StorePage {
@@ -58,12 +64,14 @@ impl StorePage {
                         .unwrap_or_else(|| "Unknown".to_string());
 
                     Some(FileDetails {
-                        filename: path.file_name()
-                            .map(|name| name.to_string_lossy().to_string())
-                            .unwrap_or_else(|| "Unknown".to_string()),
+                        filename: path.file_name().unwrap().to_string_lossy().to_string(),
                         size,
-                        file_type,
-                        path: path.display().to_string(),
+                        file_type: "Unknown".to_string(), // Update this as needed
+                        path: path.to_string_lossy().to_string(),
+                        encryption_time: None,
+                        encryption_memory_used: None,
+                        decryption_time: None,
+                        decryption_memory_used: None,
                     })
                 }
                 Err(_) => None
@@ -97,6 +105,7 @@ impl StorePage {
 
         let button_row = Row::new()
             .spacing(20)
+            .push(file_select_button)
             .push(encrypt_button)
             .push(decrypt_button);
 
@@ -104,14 +113,12 @@ impl StorePage {
             .spacing(20)
             .align_items(Alignment::Center)
             .push(Text::new("Select a file to encrypt or decrypt!").size(24))
-            .push(file_select_button)
             .push(button_row);
 
-            
-        // In the view function, update the details_layout creation:
         if let Some(details) = &self.file_details {
             let details_layout = Column::new()
                 .spacing(10)
+                .push(Text::new("File Details").size(24))
                 .push(
                     Container::new(
                         Row::new()
@@ -152,13 +159,72 @@ impl StorePage {
                     .style(AlternateRowDark)
                     .width(Length::Units(300))
                 );
-        
-            // Wrap the entire details layout in a bordered container
+
+            let mut performance_layout = Column::new()
+                .spacing(10)
+                .push(Text::new("Performance Metrics").size(24));
+
+            if let Some(encryption_time) = details.encryption_time {
+                performance_layout = performance_layout.push(
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Encryption Time:").size(18))
+                            .push(Text::new(&format!("{:?}", encryption_time)).size(18))
+                    )
+                    .style(AlternateRowLight)
+                    .width(Length::Units(300))
+                );
+            }
+
+            if let Some(encryption_memory_used) = details.encryption_memory_used {
+                performance_layout = performance_layout.push(
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Encryption Memory Used:").size(18))
+                            .push(Text::new(&format!("{} KB", encryption_memory_used)).size(18))
+                    )
+                    .style(AlternateRowDark)
+                    .width(Length::Units(300))
+                );
+            }
+
+            if let Some(decryption_time) = details.decryption_time {
+                performance_layout = performance_layout.push(
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Decryption Time:").size(18))
+                            .push(Text::new(&format!("{:?}", decryption_time)).size(18))
+                    )
+                    .style(AlternateRowLight)
+                    .width(Length::Units(300))
+                );
+            }
+
+            if let Some(decryption_memory_used) = details.decryption_memory_used {
+                performance_layout = performance_layout.push(
+                    Container::new(
+                        Row::new()
+                            .spacing(20)
+                            .push(Text::new("Decryption Memory Used:").size(18))
+                            .push(Text::new(&format!("{} KB", decryption_memory_used)).size(18))
+                    )
+                    .style(AlternateRowDark)
+                    .width(Length::Units(300))
+                );
+            }
+    
             let bordered_details = Container::new(details_layout)
                 .style(BlueBorderContainer)
                 .padding(10);
-        
-            content = content.push(bordered_details);
+
+            let bordered_performance = Container::new(performance_layout)
+                .style(BlueBorderContainer)
+                .padding(10);
+
+            content = content.push(bordered_details).push(bordered_performance);
         }
 
         let container = Container::new(content)
@@ -181,8 +247,14 @@ impl StorePage {
         }
     }
 
-    pub fn encrypt_file(&self) {
+    pub fn encrypt_file(&mut self) {
         if let Some(path) = &self.selected_file {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            let start_time = Instant::now();
+            let initial_memory = system.used_memory();
+
             let file_content = fs::read(path).expect("Failed to read file");
             let encryptor =
                 Encryptor::with_user_passphrase(SecretString::new("password".to_string()));
@@ -195,11 +267,36 @@ impl StorePage {
                 .expect("Failed to encrypt file");
             writer.finish().expect("Failed to finalize encryption");
             fs::write(path, encrypted_output).expect("Failed to write encrypted file");
+
+            let duration = start_time.elapsed();
+            system.refresh_all();
+            let final_memory = system.used_memory();
+
+            let memory_used = if final_memory >= initial_memory {
+                final_memory - initial_memory
+            } else {
+                0
+            };
+
+            println!("Encryption time: {:?}", duration);
+            println!("Memory used: {} KB", memory_used);
+
+            // Update file details with encryption time and memory used
+            if let Some(details) = &mut self.file_details {
+                details.encryption_time = Some(duration);
+                details.encryption_memory_used = Some(memory_used);
+            }
         }
     }
-
-    pub fn decrypt_file(&self) {
+    
+    pub fn decrypt_file(&mut self) {
         if let Some(path) = &self.selected_file {
+            let mut system = System::new_all();
+            system.refresh_all();
+
+            let start_time = Instant::now();
+            let initial_memory = system.used_memory();
+
             let file_content = fs::read(path).expect("Failed to read file");
             let decryptor =
                 Decryptor::new(file_content.as_slice()).expect("Failed to create decryptor");
@@ -215,6 +312,25 @@ impl StorePage {
                 _ => panic!("Unsupported decryptor"),
             };
             fs::write(path, decrypted_content).expect("Failed to write decrypted file");
+
+            let duration = start_time.elapsed();
+            system.refresh_all();
+            let final_memory = system.used_memory();
+
+            let memory_used = if final_memory >= initial_memory {
+                final_memory - initial_memory
+            } else {
+                0
+            };
+
+            println!("Decryption time: {:?}", duration);
+            println!("Memory used: {} KB", memory_used);
+
+            // Update file details with decryption time and memory used
+            if let Some(details) = &mut self.file_details {
+                details.decryption_time = Some(duration);
+                details.decryption_memory_used = Some(memory_used);
+            }
         }
     }
 }

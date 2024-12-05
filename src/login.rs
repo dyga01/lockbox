@@ -10,9 +10,12 @@ use hex::{decode, encode};
 use iced::{button, text_input};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use std::fs;
 use std::env;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
+use dirs::config_dir;
+use std::path::PathBuf;
 
 // Create an alias for convenience
 type Aes256Cbc = Cbc<Aes256, Pkcs7>;
@@ -67,11 +70,39 @@ impl LoginPage {
                     return;
                 }
 
-                // Load environment variables
-                dotenv().ok();
-                let key = env::var("SECRET_KEY").expect("SECRET_KEY must be set");
-                let key = key.as_bytes(); // Convert to bytes
-                let iv = rand::thread_rng().gen::<[u8; 16]>(); // Generate 16 bytes IV
+                // Get the platform-specific directory
+                let config_dir = config_dir().expect("Failed to get config directory");
+                let key_file_path = config_dir.join("lockbox").join("secret_key");
+
+                // Check if the key file exists
+                if !key_file_path.exists() {
+                    println!("Secret key file does not exist. Please create it using the following commands:");
+                    println!(r#"mkdir -p "$(dirname "$(dirs::config_dir)/lockbox/secret_key")""#);
+                    println!(r#"echo "anexampleveryverysecretkey123456" > "$(dirs::config_dir)/lockbox/secret_key""#);
+                    return;
+                }
+
+                // Read the key from the file
+                let stored_key = fs::read(&key_file_path).expect("Failed to read secret key from file");
+                let key = stored_key.as_slice();
+
+                // Convert the key to a string slice
+                // let key_str = std::str::from_utf8(key).expect("Failed to convert key to string");
+                if key.len() != 32 {
+                    panic!("The key length is not 32 bytes. You either never set a key or your key is too short. Follow the programs readme to learn more.");
+                }
+
+                // Generate a random IV (Initialization Vector)
+                let mut rng = rand::thread_rng();
+                let mut iv = [0u8; 16];
+                rng.fill(&mut iv);
+
+                // Encrypt the password
+                let cipher = Aes256Cbc::new_from_slices(key, &iv).unwrap();
+                let ciphertext = cipher.encrypt_vec(self.password.as_bytes());
+
+                // Store the encrypted password and IV
+                let encrypted_data = format!("{}:{}", encode(iv), encode(ciphertext));
 
                 // Create auth data
                 let auth_data = AuthData {
@@ -99,6 +130,9 @@ impl LoginPage {
                 contents = contents.trim_matches(char::from(0)).to_string();
 
                 println!("contents: {}", contents);
+
+
+
                 if contents.trim().is_empty() || contents == r#"{"username":"","password":""}"# {
                     // First time login, save the credentials
                     let encrypted_data = format!("{}:{}", encode(iv), encode(ciphertext));

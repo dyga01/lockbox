@@ -5,16 +5,16 @@ use crate::AppState;
 use aes::Aes256;
 use block_modes::block_padding::Pkcs7;
 use block_modes::{BlockMode, Cbc};
+use dirs::config_dir;
 use dotenv::dotenv;
 use hex::{decode, encode};
 use iced::{button, text_input};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::fs;
 use std::env;
+use std::fs;
 use std::fs::OpenOptions;
 use std::io::{Read, Write};
-use dirs::config_dir;
 use std::path::PathBuf;
 
 // Create an alias for convenience
@@ -78,12 +78,15 @@ impl LoginPage {
                 if !key_file_path.exists() {
                     println!("Secret key file does not exist. Please create it using the following commands:");
                     println!(r#"mkdir -p "$(dirname "$(dirs::config_dir)/lockbox/secret_key")""#);
-                    println!(r#"echo "anexampleveryverysecretkey123456" > "$(dirs::config_dir)/lockbox/secret_key""#);
+                    println!(
+                        r#"echo "anexampleveryverysecretkey123456" > "$(dirs::config_dir)/lockbox/secret_key""#
+                    );
                     return;
                 }
 
                 // Read the key from the file
-                let stored_key = fs::read(&key_file_path).expect("Failed to read secret key from file");
+                let stored_key =
+                    fs::read(&key_file_path).expect("Failed to read secret key from file");
                 let key = stored_key.as_slice();
 
                 // Convert the key to a string slice
@@ -130,8 +133,6 @@ impl LoginPage {
                 contents = contents.trim_matches(char::from(0)).to_string();
 
                 println!("contents: {}", contents);
-
-
 
                 if contents.trim().is_empty() || contents == r#"{"username":"","password":""}"# {
                     // First time login, save the credentials

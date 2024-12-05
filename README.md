@@ -4,12 +4,13 @@
 
 ## Overview
 
-lockbox is a secure application that allows users to store and manage their files
+lockbox is a secure application that allows users to encrypt and decrypt files
 
 ## Features
 
 - Secure login with AES-256 encryption
-- Persistent storage of credentials
+- Encrypt and decrypt files using the age crate
+- Detailed file and encryption information
 - User-friendly interface
 
 ## Getting Started
@@ -17,6 +18,7 @@ lockbox is a secure application that allows users to store and manage their file
 ### Prerequisites
 
 - Rust and Cargo installed on your machine
+- Mac OS
 
 ### Setup
 
@@ -27,10 +29,12 @@ lockbox is a secure application that allows users to store and manage their file
     cd lockbox
     ```
 
-2. Create a `.env` file in the root directory and add your secret key:
+2. Create the necessary directory and secret key file:
 
     ```sh
-    echo "SECRET_KEY=anexampleveryverysecretkey123456" > .env
+    mkdir -p ~/Library/Application\ Support/lockbox
+    echo -n "anexampleveryverysecretkey12345678" > ~/Library/Application\ Support/lockbox/secret_key
+    cat ~/Library/Application\ Support/lockbox/secret_key
     ```
 
 3. Build and run the project:

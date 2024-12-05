@@ -132,8 +132,6 @@ impl LoginPage {
                 // Clean the contents by removing null characters
                 contents = contents.trim_matches(char::from(0)).to_string();
 
-                println!("contents: {}", contents);
-
                 if contents.trim().is_empty() || contents == r#"{"username":"","password":""}"# {
                     // First time login, save the credentials
                     let encrypted_data = format!("{}:{}", encode(iv), encode(ciphertext));
@@ -171,7 +169,6 @@ impl LoginPage {
             // Handle switching to the store page
             Message::SwitchToStorePage => {
                 // Logic to switch to the store page
-                println!("switched to store page, need logic");
                 self.state = AppState::StorePage; // Update the state
             }
             Message::TriggerFileSelection => {
@@ -180,12 +177,10 @@ impl LoginPage {
             }
             Message::EncryptFile => {
                 // Call the function to encrypt a file
-                println!("Encrypting file...");
                 self.store_page.encrypt_file();
             }
             Message::DecryptFile => {
                 // Call the function to decrypt a file
-                println!("Decrypting file...");
                 self.store_page.decrypt_file();
             }
         }

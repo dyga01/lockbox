@@ -222,7 +222,6 @@ impl StorePage {
             fs::write(path, encrypted_output).expect("Failed to write encrypted file");
 
             let duration = start_time.elapsed();
-            println!("Encryption time: {:?}", duration);
 
             // Update file details with encryption time
             if let Some(details) = &mut self.file_details {
@@ -232,9 +231,9 @@ impl StorePage {
     }
 
     pub fn decrypt_file(&mut self) {
-        if let Some(path) = &self.selected_file {    
+        if let Some(path) = &self.selected_file {
             let start_time = Instant::now();
-    
+
             let file_content = match fs::read(path) {
                 Ok(content) => content,
                 Err(e) => {
@@ -242,7 +241,7 @@ impl StorePage {
                     return;
                 }
             };
-    
+
             let decryptor = match Decryptor::new(file_content.as_slice()) {
                 Ok(decryptor) => decryptor,
                 Err(e) => {
@@ -250,7 +249,7 @@ impl StorePage {
                     return;
                 }
             };
-    
+
             let mut decrypted_content = Vec::new();
             match decryptor {
                 Decryptor::Passphrase(decryptor) => {
@@ -267,15 +266,14 @@ impl StorePage {
                     return;
                 }
             };
-    
+
             if let Err(e) = fs::write(path, decrypted_content) {
                 eprintln!("Failed to write decrypted file: {:?}", e);
                 return;
             }
-    
+
             let duration = start_time.elapsed();
-            println!("Decryption time: {:?}", duration);
-    
+
             // Update file details with decryption time
             if let Some(details) = &mut self.file_details {
                 details.decryption_time = Some(duration);

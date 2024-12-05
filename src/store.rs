@@ -267,35 +267,57 @@ impl StorePage {
         if let Some(path) = &self.selected_file {
             let mut system = System::new_all();
             system.refresh_all();
-
+    
             let start_time = Instant::now();
             let initial_memory = system.used_memory();
-
-            let file_content = fs::read(path).expect("Failed to read file");
-            let decryptor =
-                Decryptor::new(file_content.as_slice()).expect("Failed to create decryptor");
+    
+            let file_content = match fs::read(path) {
+                Ok(content) => content,
+                Err(e) => {
+                    eprintln!("Failed to read file: {:?}", e);
+                    return;
+                }
+            };
+    
+            let decryptor = match Decryptor::new(file_content.as_slice()) {
+                Ok(decryptor) => decryptor,
+                Err(e) => {
+                    eprintln!("Failed to create decryptor: {:?}", e);
+                    return;
+                }
+            };
+    
             let mut decrypted_content = Vec::new();
             match decryptor {
                 Decryptor::Passphrase(decryptor) => {
-                    decryptor
+                    if let Err(e) = decryptor
                         .decrypt(&SecretString::new("password".to_string()), None)
-                        .expect("Failed to decrypt file")
-                        .read_to_end(&mut decrypted_content)
-                        .expect("Failed to read decrypted content");
+                        .and_then(|mut reader| Ok(reader.read_to_end(&mut decrypted_content)?))
+                    {
+                        eprintln!("Failed to decrypt file: {:?}", e);
+                        return;
+                    }
                 }
-                _ => panic!("Unsupported decryptor"),
+                _ => {
+                    eprintln!("Unsupported decryptor");
+                    return;
+                }
             };
-            fs::write(path, decrypted_content).expect("Failed to write decrypted file");
-
+    
+            if let Err(e) = fs::write(path, decrypted_content) {
+                eprintln!("Failed to write decrypted file: {:?}", e);
+                return;
+            }
+    
             system.refresh_all();
             let final_memory = system.used_memory();
             let duration = start_time.elapsed();
-
+    
             let memory_used = final_memory.saturating_sub(initial_memory);
-
+    
             println!("Decryption time: {:?}", duration);
             println!("Memory used: {} KB", memory_used);
-
+    
             // Update file details with decryption time and memory used
             if let Some(details) = &mut self.file_details {
                 details.decryption_time = Some(duration);

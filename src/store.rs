@@ -7,7 +7,6 @@ use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use std::time::Instant;
-use sysinfo::{System, SystemExt};
 
 #[derive(Default)]
 pub struct StorePage {
@@ -26,9 +25,7 @@ struct FileDetails {
     file_type: String,
     path: String,
     encryption_time: Option<std::time::Duration>,
-    encryption_memory_used: Option<u64>,
     decryption_time: Option<std::time::Duration>,
-    decryption_memory_used: Option<u64>,
 }
 
 impl StorePage {
@@ -70,9 +67,7 @@ impl StorePage {
                         file_type: file_type.to_string(), // Update this as needed
                         path: path.to_string_lossy().to_string(),
                         encryption_time: None,
-                        encryption_memory_used: None,
                         decryption_time: None,
-                        decryption_memory_used: None,
                     })
                 }
                 Err(_) => None,
@@ -148,9 +143,7 @@ impl StorePage {
             let performance_labels_column = Column::new()
                 .spacing(10)
                 .push(Text::new("Encryption Time:").size(18))
-                .push(Text::new("Encryption Memory Used:").size(18))
-                .push(Text::new("Decryption Time:").size(18))
-                .push(Text::new("Decryption Memory Used:").size(18));
+                .push(Text::new("Decryption Time:").size(18));
 
             let performance_values_column = Column::new()
                 .spacing(10)
@@ -163,22 +156,8 @@ impl StorePage {
                 )
                 .push(
                     Text::new(&format!(
-                        "{} KB",
-                        details.encryption_memory_used.unwrap_or_default()
-                    ))
-                    .size(18),
-                )
-                .push(
-                    Text::new(&format!(
                         "{:.5} s",
                         details.decryption_time.unwrap_or_default().as_secs_f64()
-                    ))
-                    .size(18),
-                )
-                .push(
-                    Text::new(&format!(
-                        "{} KB",
-                        details.decryption_memory_used.unwrap_or_default()
                     ))
                     .size(18),
                 );
@@ -227,11 +206,7 @@ impl StorePage {
 
     pub fn encrypt_file(&mut self) {
         if let Some(path) = &self.selected_file {
-            let mut system = System::new_all();
-            system.refresh_all();
-
             let start_time = Instant::now();
-            let initial_memory = system.used_memory();
 
             let file_content = fs::read(path).expect("Failed to read file");
             let encryptor =
@@ -246,30 +221,19 @@ impl StorePage {
             writer.finish().expect("Failed to finalize encryption");
             fs::write(path, encrypted_output).expect("Failed to write encrypted file");
 
-            system.refresh_all();
-            let final_memory = system.used_memory();
             let duration = start_time.elapsed();
-
-            let memory_used = final_memory.saturating_sub(initial_memory);
-
             println!("Encryption time: {:?}", duration);
-            println!("Memory used: {} KB", memory_used);
 
-            // Update file details with encryption time and memory used
+            // Update file details with encryption time
             if let Some(details) = &mut self.file_details {
                 details.encryption_time = Some(duration);
-                details.encryption_memory_used = Some(memory_used);
             }
         }
     }
 
     pub fn decrypt_file(&mut self) {
-        if let Some(path) = &self.selected_file {
-            let mut system = System::new_all();
-            system.refresh_all();
-    
+        if let Some(path) = &self.selected_file {    
             let start_time = Instant::now();
-            let initial_memory = system.used_memory();
     
             let file_content = match fs::read(path) {
                 Ok(content) => content,
@@ -309,19 +273,12 @@ impl StorePage {
                 return;
             }
     
-            system.refresh_all();
-            let final_memory = system.used_memory();
             let duration = start_time.elapsed();
-    
-            let memory_used = final_memory.saturating_sub(initial_memory);
-    
             println!("Decryption time: {:?}", duration);
-            println!("Memory used: {} KB", memory_used);
     
-            // Update file details with decryption time and memory used
+            // Update file details with decryption time
             if let Some(details) = &mut self.file_details {
                 details.decryption_time = Some(duration);
-                details.decryption_memory_used = Some(memory_used);
             }
         }
     }

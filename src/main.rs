@@ -152,7 +152,15 @@ impl Sandbox for LoginPage {
 
 // Main function that calls the iced front-end
 fn main() {
-    LoginPage::run(Settings::default()).unwrap();
+    let settings = Settings {
+        window: iced::window::Settings {
+            size: (800, 600), // Set the initial size (width, height)
+            ..iced::window::Settings::default()
+        },
+        ..Settings::default()
+    };
+
+    LoginPage::run(settings).unwrap();
 }
 
 /*

@@ -67,7 +67,7 @@ impl StorePage {
                     Some(FileDetails {
                         filename: path.file_name().unwrap().to_string_lossy().to_string(),
                         size,
-                        file_type: "Unknown".to_string(), // Update this as needed
+                        file_type: file_type.to_string(), // Update this as needed
                         path: path.to_string_lossy().to_string(),
                         encryption_time: None,
                         encryption_memory_used: None,
